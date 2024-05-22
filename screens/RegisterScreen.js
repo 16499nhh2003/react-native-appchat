@@ -11,6 +11,8 @@ import React, { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
 
+import { API_URL } from '@env';
+
 const RegisterScreen = () => {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -27,7 +29,7 @@ const RegisterScreen = () => {
 
     // send a POST  request to the backend API to register the user
     axios
-      .post("http://localhost:8000/register", user)
+      .post(`${API_URL}/register`, user)
       .then((response) => {
         console.log(response);
         Alert.alert(
@@ -135,7 +137,7 @@ const RegisterScreen = () => {
             />
           </View>
 
-          <View style={{ marginTop: 10 }}>
+          {/* <View style={{ marginTop: 10 }}>
             <Text style={{ fontSize: 18, fontWeight: "600", color: "gray" }}>
               Image
             </Text>
@@ -153,7 +155,7 @@ const RegisterScreen = () => {
               placeholderTextColor={"black"}
               placeholder="Image"
             />
-          </View>
+          </View> */}
 
           <Pressable
             onPress={handleRegister}

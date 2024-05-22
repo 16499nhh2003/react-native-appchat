@@ -15,7 +15,7 @@ app.use(passport.initialize());
 const jwt = require("jsonwebtoken");
 
 mongoose
-  .connect("mongodb+srv://sujananand:sujan@cluster0.qvtqiux.mongodb.net/", {
+  .connect("mongodb+srv://huyhoa:12345@cluster0.r6iirdb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
@@ -37,10 +37,8 @@ const Message = require("./models/message");
 
 app.post("/register", (req, res) => {
   const { name, email, password, image } = req.body;
-
   // create a new User object
   const newUser = new User({ name, email, password, image });
-
   // save the user to the database
   newUser
     .save()
@@ -62,7 +60,6 @@ const createToken = (userId) => {
 
   // Generate the token with a secret key and expiration time
   const token = jwt.sign(payload, "Q$r2K6W8n!jCW%Zk", { expiresIn: "1h" });
-
   return token;
 };
 

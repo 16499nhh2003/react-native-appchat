@@ -5,11 +5,14 @@ import {
   Text,
   TextInput,
   View,
+  Alert
 } from "react-native";
 import React, { useState ,useEffect} from "react";
 import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+
+import { API_URL } from '@env';
 
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
@@ -19,7 +22,6 @@ const LoginScreen = () => {
     const checkLoginStatus = async () => {
       try {
         const token = await AsyncStorage.getItem("authToken");
-
         if (token) {
           navigation.replace("Home");
         } else {
@@ -30,8 +32,9 @@ const LoginScreen = () => {
       }
     };
 
-    checkLoginStatus();
+    // checkLoginStatus();
   }, []);
+
   const handleLogin = () => {
     const user = {
       email: email,
@@ -39,12 +42,11 @@ const LoginScreen = () => {
     };
 
     axios
-      .post("http://localhost:8000/login", user)
+      .post(`${API_URL}/login`, user)
       .then((response) => {
-        console.log(response);
+        // console.log(response);
         const token = response.data.token;
         AsyncStorage.setItem("authToken", token);
-
         navigation.replace("Home");
       })
       .catch((error) => {
@@ -95,7 +97,7 @@ const LoginScreen = () => {
                 width: 300,
               }}
               placeholderTextColor={"black"}
-              placeholder="enter Your Email"
+              placeholder="Nhập tài khoản email của bạn"
             />
           </View>
 
@@ -116,7 +118,7 @@ const LoginScreen = () => {
                 width: 300,
               }}
               placeholderTextColor={"black"}
-              placeholder="Passowrd"
+              placeholder="Mật khẩu"
             />
           </View>
 

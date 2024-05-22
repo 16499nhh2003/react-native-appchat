@@ -15,7 +15,8 @@ const userSchema = new mongoose.Schema({
   },
   image: {
     type: String,
-    required: true,
+    default: "https://cellphones.com.vn/sforum/wp-content/uploads/2023/10/avatar-trang-4.jpg",
+    required: false,
   },
   freindRequests: [
     {

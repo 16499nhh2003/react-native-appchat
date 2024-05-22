@@ -5,9 +5,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { MaterialIcons } from "@expo/vector-icons";
 import { UserType } from "../UserContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import jwt_decode from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 import User from "../components/User";
+
+import { API_URL } from '@env';
 const HomeScreen = () => {
   const navigation = useNavigation();
   const { userId, setUserId } = useContext(UserType);
@@ -16,7 +18,7 @@ const HomeScreen = () => {
     navigation.setOptions({
       headerTitle: "",
       headerLeft: () => (
-        <Text style={{ fontSize: 16, fontWeight: "bold" }}>Swift Chat</Text>
+        <Text style={{ fontSize: 16, fontWeight: "bold" }}>App Chat</Text>
       ),
       headerRight: () => (
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
@@ -35,12 +37,13 @@ const HomeScreen = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       const token = await AsyncStorage.getItem("authToken");
-      const decodedToken = jwt_decode(token);
+      const decodedToken = jwtDecode(token);
+      console.log(decodedToken);
       const userId = decodedToken.userId;
       setUserId(userId);
 
       axios
-        .get(`http://localhost:8000/users/${userId}`)
+        .get(`${API_URL}/users/${userId}`)
         .then((response) => {
           setUsers(response.data);
         })

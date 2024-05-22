@@ -19,6 +19,8 @@ import { UserType } from "../UserContext";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
 
+import { API_URL  } from '@env';
+
 const ChatMessagesScreen = () => {
   const [showEmojiSelector, setShowEmojiSelector] = useState(false);
   const [selectedMessages, setSelectedMessages] = useState([]);
@@ -56,7 +58,7 @@ const ChatMessagesScreen = () => {
   const fetchMessages = async () => {
     try {
       const response = await fetch(
-        `http://localhost:8000/messages/${userId}/${recepientId}`
+        `${API_URL}/messages/${userId}/${recepientId}`
       );
       const data = await response.json();
 
@@ -78,7 +80,7 @@ const ChatMessagesScreen = () => {
     const fetchRecepientData = async () => {
       try {
         const response = await fetch(
-          `http://localhost:8000/user/${recepientId}`
+          `${API_URL}/user/${recepientId}`
         );
 
         const data = await response.json();
@@ -109,7 +111,7 @@ const ChatMessagesScreen = () => {
         formData.append("messageText", message);
       }
 
-      const response = await fetch("http://localhost:8000/messages", {
+      const response = await fetch(`${API_URL}/messages`, {
         method: "POST",
         body: formData,
       });
@@ -182,7 +184,7 @@ const ChatMessagesScreen = () => {
 
   const deleteMessages = async (messageIds) => {
     try {
-      const response = await fetch("http://localhost:8000/deleteMessages", {
+      const response = await fetch(`${API_URL}/deleteMessages`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
