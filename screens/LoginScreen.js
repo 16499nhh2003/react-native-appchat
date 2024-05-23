@@ -7,7 +7,7 @@ import {
   View,
   Alert
 } from "react-native";
-import React, { useState ,useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -32,7 +32,7 @@ const LoginScreen = () => {
       }
     };
 
-    // checkLoginStatus();
+    checkLoginStatus();
   }, []);
 
   const handleLogin = () => {
@@ -44,12 +44,13 @@ const LoginScreen = () => {
     axios
       .post(`${API_URL}/login`, user)
       .then((response) => {
-        // console.log(response);
+        console.log(response);
         const token = response.data.token;
         AsyncStorage.setItem("authToken", token);
         navigation.replace("Home");
       })
       .catch((error) => {
+        console.log(error);
         Alert.alert("Login Error", "Invalid email or password");
         console.log("Login Error", error);
       });

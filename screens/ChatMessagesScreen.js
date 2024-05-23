@@ -8,7 +8,7 @@ import {
   Pressable,
   Image,
 } from "react-native";
-import React, { useState, useContext, useLayoutEffect, useEffect,useRef } from "react";
+import React, { useState, useContext, useLayoutEffect, useEffect, useRef } from "react";
 import { Feather } from "@expo/vector-icons";
 import { Ionicons } from "@expo/vector-icons";
 import { FontAwesome } from "@expo/vector-icons";
@@ -19,7 +19,8 @@ import { UserType } from "../UserContext";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
 
-import { API_URL  } from '@env';
+import { API_URL } from '@env';
+import SocketIOClient from 'socket.io-client';
 
 const ChatMessagesScreen = () => {
   const [showEmojiSelector, setShowEmojiSelector] = useState(false);
@@ -34,26 +35,26 @@ const ChatMessagesScreen = () => {
   const { userId, setUserId } = useContext(UserType);
 
   const scrollViewRef = useRef(null);
+  const socket = SocketIOClient(`${API_URL}`);
+
 
   useEffect(() => {
     scrollToBottom()
-  },[]);
+  }, []);
 
   const scrollToBottom = () => {
-      if(scrollViewRef.current){
-          scrollViewRef.current.scrollToEnd({animated:false})
-      }
+    if (scrollViewRef.current) {
+      scrollViewRef.current.scrollToEnd({ animated: false })
+    }
   }
 
   const handleContentSizeChange = () => {
-      scrollToBottom();
+    scrollToBottom();
   }
 
   const handleEmojiPress = () => {
     setShowEmojiSelector(!showEmojiSelector);
   };
-
-
 
   const fetchMessages = async () => {
     try {
@@ -92,6 +93,28 @@ const ChatMessagesScreen = () => {
 
     fetchRecepientData();
   }, []);
+
+
+  useEffect(() => {
+
+    socket.on('connect', () => {
+      console.log('Connected to server');
+      console.log(socket.id);
+      socket.emit('register user', { _id: userId });
+    });
+
+    socket.on('chat message'  , (newMessage)=>{
+      setMessages(prevMessages => [...prevMessages, newMessage])
+    })
+
+  
+    // Gắn sự kiện khi component unmount
+    return () => {
+      socket.disconnect();
+    };
+  }, [userId])
+
+
   const handleSend = async (messageType, imageUri) => {
     try {
       const formData = new FormData();
@@ -111,6 +134,18 @@ const ChatMessagesScreen = () => {
         formData.append("messageText", message);
       }
 
+      const newMessage = {
+        senderId: { _id: userId },
+        recepientId: recepientId,
+        messageType: messageType,
+        imageUrl: messageType === "image" ? imageUri : null,
+        timeStamp: new Date().toISOString(),
+        message:  messageType === "text" ? message : null
+      };
+      
+      setMessages(prevMessages => [...prevMessages, newMessage]);
+      socket.emit('chat message', newMessage);
+
       const response = await fetch(`${API_URL}/messages`, {
         method: "POST",
         body: formData,
@@ -119,8 +154,6 @@ const ChatMessagesScreen = () => {
       if (response.ok) {
         setMessage("");
         setSelectedImage("");
-
-        fetchMessages();
       }
     } catch (error) {
       console.log("error in sending the message", error);
@@ -194,8 +227,8 @@ const ChatMessagesScreen = () => {
 
       if (response.ok) {
         setSelectedMessages((prevSelectedMessages) =>
-        prevSelectedMessages.filter((id) => !messageIds.includes(id))
-      );
+          prevSelectedMessages.filter((id) => !messageIds.includes(id))
+        );
 
         fetchMessages();
       } else {
@@ -239,7 +272,7 @@ const ChatMessagesScreen = () => {
   };
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: "#F0F0F0" }}>
-      <ScrollView ref={scrollViewRef} contentContainerStyle={{flexGrow:1}} onContentSizeChange={handleContentSizeChange}>
+      <ScrollView ref={scrollViewRef} contentContainerStyle={{ flexGrow: 1 }} onContentSizeChange={handleContentSizeChange}>
         {messages.map((item, index) => {
           if (item.messageType === "text") {
             const isSelected = selectedMessages.includes(item._id);
@@ -250,21 +283,21 @@ const ChatMessagesScreen = () => {
                 style={[
                   item?.senderId?._id === userId
                     ? {
-                        alignSelf: "flex-end",
-                        backgroundColor: "#DCF8C6",
-                        padding: 8,
-                        maxWidth: "60%",
-                        borderRadius: 7,
-                        margin: 10,
-                      }
+                      alignSelf: "flex-end",
+                      backgroundColor: "#DCF8C6",
+                      padding: 8,
+                      maxWidth: "60%",
+                      borderRadius: 7,
+                      margin: 10,
+                    }
                     : {
-                        alignSelf: "flex-start",
-                        backgroundColor: "white",
-                        padding: 8,
-                        margin: 10,
-                        borderRadius: 7,
-                        maxWidth: "60%",
-                      },
+                      alignSelf: "flex-start",
+                      backgroundColor: "white",
+                      padding: 8,
+                      margin: 10,
+                      borderRadius: 7,
+                      maxWidth: "60%",
+                    },
 
                   isSelected && { width: "100%", backgroundColor: "#F0FFFF" },
                 ]}
@@ -303,21 +336,21 @@ const ChatMessagesScreen = () => {
                 style={[
                   item?.senderId?._id === userId
                     ? {
-                        alignSelf: "flex-end",
-                        backgroundColor: "#DCF8C6",
-                        padding: 8,
-                        maxWidth: "60%",
-                        borderRadius: 7,
-                        margin: 10,
-                      }
+                      alignSelf: "flex-end",
+                      backgroundColor: "#DCF8C6",
+                      padding: 8,
+                      maxWidth: "60%",
+                      borderRadius: 7,
+                      margin: 10,
+                    }
                     : {
-                        alignSelf: "flex-start",
-                        backgroundColor: "white",
-                        padding: 8,
-                        margin: 10,
-                        borderRadius: 7,
-                        maxWidth: "60%",
-                      },
+                      alignSelf: "flex-start",
+                      backgroundColor: "white",
+                      padding: 8,
+                      margin: 10,
+                      borderRadius: 7,
+                      maxWidth: "60%",
+                    },
                 ]}
               >
                 <View>

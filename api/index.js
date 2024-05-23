@@ -5,6 +5,14 @@ const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
 
 const app = express();
+const server = require('http').Server(app);
+const io = require('socket.io')(server  , {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
+
 const port = 8000;
 const cors = require("cors");
 app.use(cors());
@@ -26,9 +34,9 @@ mongoose
     console.log("Error connecting to MongoDb", err);
   });
 
-app.listen(port, () => {
-  console.log("Server running on port 8000");
-});
+// app.listen(port, () => {
+//   console.log("Server running on port 8000");
+// });
 
 const User = require("./models/user");
 const Message = require("./models/message");
@@ -66,6 +74,7 @@ const createToken = (userId) => {
 //endpoint for logging in of that particular user
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
+  console.log(req.body);
 
   //check if the email and password are provided
   if (!email || !password) {
@@ -288,35 +297,89 @@ app.post("/deleteMessages", async (req, res) => {
 
 
 
-app.get("/friend-requests/sent/:userId",async(req,res) => {
-  try{
-    const {userId} = req.params;
-    const user = await User.findById(userId).populate("sentFriendRequests","name email image").lean();
+app.get("/friend-requests/sent/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const user = await User.findById(userId).populate("sentFriendRequests", "name email image").lean();
 
     const sentFriendRequests = user.sentFriendRequests;
 
     res.json(sentFriendRequests);
-  } catch(error){
-    console.log("error",error);
+  } catch (error) {
+    console.log("error", error);
     res.status(500).json({ error: "Internal Server" });
   }
 })
 
-app.get("/friends/:userId",(req,res) => {
-  try{
-    const {userId} = req.params;
+app.get("/friends/:userId", (req, res) => {
+  try {
+    const { userId } = req.params;
 
     User.findById(userId).populate("friends").then((user) => {
-      if(!user){
-        return res.status(404).json({message: "User not found"})
+      if (!user) {
+        return res.status(404).json({ message: "User not found" })
       }
 
       const friendIds = user.friends.map((friend) => friend._id);
 
       res.status(200).json(friendIds);
     })
-  } catch(error){
-    console.log("error",error);
-    res.status(500).json({message:"internal server error"})
+  } catch (error) {
+    console.log("error", error);
+    res.status(500).json({ message: "internal server error" })
   }
 })
+
+let connectedUsers = [];
+// settings socket 
+io.on('connection', client => {
+
+  client.on('chat message', (data) => {
+    const newMessage = {
+      senderId:{ _id:  data.senderId._id} ,
+      recepientId: data.recepientId,
+      messageType: data.messageType,
+      message: data.message,
+      imageUrl: data.messageType,
+      timeStamp: data.timeStamp,
+    };
+    const idnguoinhan = newMessage.recepientId
+    console.log(connectedUsers)
+    const user = connectedUsers.find(u => u._id === idnguoinhan);
+    if (user) {
+      client.to(user.id).emit('chat message', newMessage);
+    }
+  })
+
+  // Nhận thông tin người dùng từ client sau khi kết nối
+  client.on('register user', userData => {
+    const user = {
+      id: client.id,
+      _id: userData._id
+    };
+
+    // Kiểm tra xem người dùng đã tồn tại trong danh sách hay chưa
+    const userIndex = connectedUsers.findIndex(u => u._id === user._id);
+    if (userIndex !== -1) {
+      // Nếu người dùng đã tồn tại, cập nhật thông tin
+      connectedUsers[userIndex] = user;
+    } else {
+      // Nếu người dùng chưa tồn tại, thêm người dùng mới vào danh sách
+      connectedUsers.push(user);
+    }
+  });
+
+  // Khi người dùng ngắt kết nối, loại bỏ họ khỏi danh sách
+  client.on('disconnect', () => {
+    connectedUsers = connectedUsers.filter(user => user.id !== client.id);
+    console.log('User disconnected:', client.id);
+  });
+
+
+
+});
+
+
+server.listen(port, function () {
+  console.log(`listening on *: ${port}`);
+});
